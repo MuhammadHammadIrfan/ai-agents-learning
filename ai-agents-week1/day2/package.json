@@ -1,0 +1,20 @@
+{
+  "name": "day2",
+  "version": "1.0.0",
+  "description": "Day 2 - AI Chatbot with Express API",
+  "main": "index.js",
+  "type": "module",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node index.js"
+  },
+  "keywords": ["ai", "chatbot", "express"],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^17.2.3",
+    "express": "^5.2.1",
+    "groq-sdk": "^0.37.0"
+  }
+}
