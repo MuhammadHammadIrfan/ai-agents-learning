@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Day4 AI Chat</title>
+    <style>
+        body {
+            font-family: Arial;
+            background: #111;
+            color: white;
+        }
+    
+        #chat {
+            max-width: 600px;
+            height: 500px;
+            margin: auto;
+            padding: 20px;
+            overflow-y: auto;
+            margin-bottom: 20px;
+        }
+    
+        .msg {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 8px;
+        }
+    
+        .user {
+            background: #1e3a8a;
+            text-align: right;
+        }
+    
+        .bot {
+            background: #334155;
+            text-align: left;
+            white-space: pre-wrap;
+            line-height: 1.6;
+        }
+
+        .bot strong {
+            font-weight: bold;
+            color: #fbbf24;
+        }
+
+        .bot code {
+            background: #1e293b;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .bot em {
+            font-style: italic;
+            color: #a5b4fc;
+        }
+    </style>
+</head>
+<body>
+    <div id="chat"></div>
+    
+    <div style="max-width:600px;margin:auto;display:flex;gap:10px;">
+        <input id="input" placeholder="Type message..." style="flex:1;padding:10px;">
+        <button id="sendBtn">Send</button>
+    </div>
+<script type="module" src="script.js"></script>
+</body>
+</html>
