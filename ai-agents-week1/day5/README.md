@@ -1,0 +1,1 @@
+RAG Fundamentals: Building a Local Vector Store & Semantic Search with Cohere Embeddings
