@@ -1,7 +1,6 @@
 import express from 'express';
 import cors from 'cors';
 import dotenv from 'dotenv';
-import Groq from 'groq-sdk';
 import { CohereClient } from 'cohere-ai';
 import { vectorStore } from './vectorStore.js';
 
@@ -13,9 +12,6 @@ const app = express();
 app.use(cors());
 app.use(express.json());
 
-const groq = new Groq({
-  apiKey: process.env.GROQ_API_KEY,
-});
 
 const cohere = new CohereClient({
   token: process.env.COHERE_API_KEY,
