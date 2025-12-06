@@ -1,0 +1,1 @@
+Built Full RAG Pipeline (Local RAG), learned: Chunking, Embeddings, Similarity search, Retrieval, Context prompt creation, RAG pipeline
