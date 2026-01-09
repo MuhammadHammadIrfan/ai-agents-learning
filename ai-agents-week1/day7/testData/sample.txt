@@ -1,0 +1,11 @@
+Artificial Intelligence and Machine Learning
+
+Machine learning is a subset of artificial intelligence that focuses on training algorithms to learn from data. Instead of being explicitly programmed, machine learning models improve their performance through experience.
+
+There are three main types of machine learning: supervised learning, unsupervised learning, and reinforcement learning. Supervised learning uses labeled data to train models. Unsupervised learning finds patterns in unlabeled data. Reinforcement learning trains agents through rewards and penalties.
+
+Deep learning is a specialized form of machine learning that uses neural networks with multiple layers. These deep neural networks can automatically learn hierarchical representations of data, making them particularly effective for tasks like image recognition and natural language processing.
+
+Vector databases have become essential for modern AI applications. They store data as high-dimensional vectors and enable fast similarity searches. This technology powers recommendation systems, semantic search, and retrieval-augmented generation (RAG) systems.
+
+RAG systems combine large language models with external knowledge bases. When a user asks a question, the system retrieves relevant context from a vector database and provides it to the language model. This approach reduces hallucinations and enables AI systems to answer questions about specific, up-to-date information.
