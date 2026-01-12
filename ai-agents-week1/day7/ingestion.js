@@ -74,12 +74,12 @@ export async function ingestDocument(userId, documentName, documentText) {
  * @returns {Promise<object>} Result
  */
 
-export async function deleteDocument(documentId){
+export async function deleteDocument(documentId, userId){
     try{
         const {error} = await supabase
         .from('documents')
         .delete()
-        .eq('id', documentId);
+        .match({id: documentId, user_id: userId});
 
         if(error) throw error;
         console.log(`Document with ID: ${documentId} deleted successfully.`);

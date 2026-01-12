@@ -1,0 +1,1 @@
+Build a production-ready multi-user RAG system, via supabase vector DB. Learnt about data isolation, sementic search, supabase rpc functions etc
