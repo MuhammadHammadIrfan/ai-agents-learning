@@ -13,7 +13,7 @@ export class Agent {
   constructor(userId = null) {
     this.userId = userId;
     this.memory = new ConversationMemory();
-    this.maxIterations = 10; //preventing infinite loops
+    this.maxIterations = 5; //preventing infinite loops
   }
   /**
    * Main agent loop: Think → Decide → Execute → Respond
@@ -61,15 +61,38 @@ export class Agent {
       }
     }
     if (!finalAnswer) {
-      finalAnswer =
-        "I couldn't complete the task within the allowed iterations.";
+      // If we ran out of iterations, try to synthesize from memory
+      const recentContext = this.memory.getRecent(8);
+      const hasResults = recentContext.some((msg) => msg.role === 'tool');
+
+      if (hasResults) {
+        finalAnswer =
+          'Based on the information I gathered: ' +
+          recentContext
+            .filter((msg) => msg.role === 'tool')
+            .map((msg) => {
+              try {
+                const result = JSON.parse(msg.content);
+                if (result.message) return result.message;
+                if (result.result) return `Result: ${result.result}`;
+                return JSON.stringify(result);
+              } catch {
+                return msg.content;
+              }
+            })
+            .join('. ') +
+          '. (Note: Reached iteration limit)';
+      } else {
+        finalAnswer =
+          "I couldn't complete the task within the allowed iterations.";
+      }
     }
 
     // adding agent response to memory
     this.memory.addMessage('agent', finalAnswer);
 
     console.log(`\n${'='.repeat(60)}`);
-    console.log(`🎯 FINAL ANSWER: ${finalAnswer}`);
+    console.log(`FINAL ANSWER: ${finalAnswer}`);
     console.log(`${'='.repeat(60)}\n`);
 
     return {
@@ -86,7 +109,57 @@ export class Agent {
     const tools = toolRegistry.getToolDescriptions();
     const context = this.memory.getContext();
 
-    const prompt = this.buildThinkingPrompt(tools, context);
+    const toolsDescription = tools
+      .map((t) => `- ${t.name}: ${t.description}`)
+      .join('\n');
+
+    const prompt = `You are an autonomous AI agent that solves tasks by using available tools.
+
+AVAILABLE TOOLS:
+${toolsDescription}
+
+CONVERSATION HISTORY:
+${context}
+
+AGENT DECISION-MAKING PROCESS:
+
+1. ANALYZE THE TASK:
+   - What is the user asking for?
+   - What information do I need to complete this task?
+   - What tools can help me get that information?
+
+2. CHECK CONVERSATION HISTORY:
+   - Review previous tool results carefully
+   - Have I already obtained the information I need?
+   - What step comes next in the task?
+
+3. DECIDE YOUR NEXT ACTION:
+   Option A - Use a Tool:
+   - If you need information you don't have yet
+   - If you need to perform a calculation
+   - If you need to search for something
+   - Format: TOOL: tool_name | PARAMS: {"param": "value"}
+   
+   Option B - Provide Final Answer:
+   - If you have all the information needed
+   - If the task is complete
+   - Synthesize all gathered information into a complete response
+   - Format: ANSWER: [your complete response]
+
+4. IMPORTANT RULES:
+   - NEVER repeat the same tool call if you already have the result
+   - Use tool results from the conversation history
+   - Break complex tasks into logical steps
+   - Each tool call should move you closer to the final answer
+   - When you have everything needed, provide the ANSWER immediately
+
+RESPONSE FORMAT (strict):
+TOOL: tool_name | PARAMS: {"param": "value"}
+OR
+ANSWER: your complete answer here
+
+What is your next action?`;
+
     const response = await cohere.chat({
       model: 'command-r-plus-08-2024',
       message: prompt,
@@ -98,54 +171,9 @@ export class Agent {
   }
 
   /**
-   * Build prompt for agent thinking
-   */
-  buildThinkingPrompt(tools, context) {
-    const toolsDescription = tools
-      .map((t) => `- ${t.name}: ${t.description}`)
-      .join('\n');
-
-    return `You are an AI agent with access to tools. You must break down complex tasks into steps and use the appropriate tools.
-
-AVAILABLE TOOLS:
-${toolsDescription}
-
-CONVERSATION HISTORY:
-${context}
-
-IMPORTANT RULES:
-1. For questions about "my documents" or "database" → ALWAYS use search-documents tool first
-2. For math calculations → use calculator tool with the expression parameter
-3. For web searches or general knowledge → use web_search tool
-4. Review tool results before deciding next action
-5. DO NOT repeat the same tool - learn from results
-6. Only give ANSWER when you have completed ALL steps
-
-RESPONSE FORMAT (you MUST follow this exactly):
-- Use a tool: TOOL: tool_name | PARAMS: {"param": "value"}
-- Final answer: ANSWER: your complete response
-
-Example 1:
-User asks: "How many documents do I have?"
-Your response: TOOL: search-documents | PARAMS: {"query": "list documents"}
-
-Example 2:
-After getting tool result with 3 documents
-Your response: ANSWER: You have 3 documents in your database.
-
-Example 3:
-User asks: "Calculate 25 + 30"
-Your response: TOOL: calculator | PARAMS: {"expression": "25 + 30"}
-
-YOUR TURN - What is your next action?`;
-  }
-
-  /**
    * Parse agent's decision from response
    */
   parseDecision(response) {
-    console.log('Raw agent response:', response);
-
     if (response.includes('TOOL:')) {
       // Extract tool name and params (support hyphens and underscores)
       const toolMatch = response.match(/TOOL:\s*([\w-]+)/i);
@@ -158,12 +186,9 @@ YOUR TURN - What is your next action?`;
         try {
           toolParams = JSON.parse(paramsMatch[1]);
         } catch (e) {
-          console.error('Failed to parse tool params:', paramsMatch[1]);
-          console.error('Error:', e.message);
+          console.error('Failed to parse tool params:', e.message);
         }
       }
-
-      console.log('Parsed tool:', toolName, 'with params:', toolParams);
 
       return {
         needsTool: true,
@@ -179,7 +204,7 @@ YOUR TURN - What is your next action?`;
     } else {
       // If agent doesn't follow format, log warning but treat as answer
       console.warn(
-        '⚠️  Agent did not follow TOOL/ANSWER format. Response:',
+        'Agent did not follow TOOL/ANSWER format. Response:',
         response.substring(0, 100),
       );
       return {
@@ -200,9 +225,10 @@ YOUR TURN - What is your next action?`;
       }
       return await toolRegistry.execute(toolName, toolParams);
     } catch (error) {
+      console.log(`Error executing tool ${toolName}:`, error.message);
       return {
         success: false,
-        message: `Error executing tool ${toolName}: ${error.message}`,
+        message: `Error executing tool ${toolName}`,
       };
     }
   }

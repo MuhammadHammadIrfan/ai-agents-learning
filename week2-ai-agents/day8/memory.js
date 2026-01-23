@@ -22,17 +22,19 @@ export class ConversationMemory {
       this.history = this.history.slice(-this.maxTurns * 2);
     }
   }
-  
+
   /**
    * Get conversation history as string
    */
   getContext() {
+    let stepNumber = 0;
     return this.history
       .map((msg) => {
         const role = msg.role.toUpperCase();
         // If it's a tool, add a label so the AI knows it's an observation
         if (msg.role === 'tool') {
-          return `OBSERVATION (Tool Result): ${msg.content}`;
+          stepNumber++;
+          return `\n✓ TOOL RESULT #${stepNumber}:\n${msg.content}\n`;
         }
         return `${role}: ${msg.content}`;
       })
